@@ -1,53 +1,119 @@
-/*
+var allkeys = require('./keys.js');
+var twitter = require('twitter');
+var spotify = require('spotify');
+var request = require('request');
+var fs = require('fs');
 
-    At the top of the liri.js file, write the code you need to grab the data 
-    from keys.js. Then store the keys in a variable.
+var liri = {
+    commands : ['my-tweets','spotify-this-song','movie-this','do-what-it-says'],
+    askTwitter : function(option) {
+        var client = new twitter ({
+            consumer_key : allkeys.twitterKeys.consumer_key,
+            consumer_secret : allkeys.twitterKeys.consumer_secret,
+            access_token_key : allkeys.twitterKeys.access_token_key,
+            access_token_secret : allkeys.twitterKeys.access_token_secret 
+        });
+        var params = {screen_name: 'bobertjones999', count: 20};
+        client.get('statuses/user_timeline', params, function(error, tweets, response) {
+            if (!error) {
+                tweets.forEach(function(aTweet){
+                                    console.log(aTweet.created_at.substring(4,10)+" "+aTweet.created_at.substring(aTweet.created_at.length-4)+" : "+aTweet.text);
+                               });
+            } else {
+                console.log('something went wrong with Twitter.');
+            }
+        });
+    },
+    askSpotify : function(option) {
+        // artist(s)
+        // song name
+        // preview link
+        // album
+        // default to the sign by ace of base if no song provided
+        spotify.search({type: 'track', query: 'track:"'+option.trim()+'"' || 'track:"the+sign"&artist:"ace+of+base"'}, function(err, data){
+            if (err) {
+                console.log('invalid song search');
+            } else {
+                data.tracks.items.forEach(function(result){
+                  console.log('artist(s): ');
+                  result.artists.forEach(function(artistResult){
+                    console.log(artistResult.name);
+                  });
+                  console.log('Song Title: '+result.name);
+                  console.log('Preview: '+result.preview_url);
+                  console.log('Album: '+result.album.name);
+                });
+            }
+        });
+    },
+    askOMDB : function(option) {
+        movie = option.trim().split(' ').join('+');
+        request('http://omdbapi.com/?t='+movie,function(err,res,body){
+                if (err) {
+                    console.log('Invalid movie title format.');
+                } else {
+                    var result = JSON.parse(body);
+                    if (result.Response === 'False') {
+                        console.log(result.Error);
+                    } else {
+                        console.log('Movie Title: '+result.Title);
+                        console.log('Year Released: '+result.Year);
+                        console.log('IMDB Rating: '+result.imdbRating);
+                        console.log('Produced in '+result.Country);
+                        console.log('Language(s): '+result.Language);
+                        console.log('Plot Summary: '+result.Plot);
+                        console.log('Actors: '+result.Actors);
+                        result.Ratings.forEach(function(rating){
+                            if (rating.Source === "Rotten Tomatoes") {
+                                console.log('Rotten Tomatoes Score: '+rating.Value);
+                            }
+                        });
+                        console.log('Website: '+(result.Webite || 'no website available'));
+                    }
+                }
+            });
+    },
+    askFile : function(option) {
 
-    Make it so liri.js can take in one of the following commands:
+    },
+    isValidCommand : function(command){
+        return (this.commands.indexOf(command) != -1) ? commands.indexOf(command) : false;
+    },
+    grabCommand : function() {
+        return process.argv[2];
+    },
+    grabOption : function() {
+        var option = '';
+        for(x=3;x<process.argv.length;x++) {
+            option += process.argv[x]+' ';
+        }
+        return option;
+    },
+    askLiri : function(){
+        var command = this.grabCommand();
+        if (this.commands.indexOf(command) === -1) {
+            console.log('invalid command');    
+        } else if (this.commands.indexOf(command) === 0) {
+              this.askTwitter();
+          } else if (this.commands.indexOf(command) === 1) {
+                this.askSpotify(this.grabOption());
+            } else if (this.commands.indexOf(command) === 2) {
+                  this.askOMDB(this.grabOption());
+              } else {
+                    this.askFile();
+                }
+        }
+};
 
-    - my-tweets
-
-    - spotify-this-song
-
-    - movie-this
-
-    - do-what-it-says
+liri.askLiri();
 
 
-    
-    node liri.js my-tweets 
-    show last 20 tweets and when they were created
 
-    node liri.js spotify-this-song 'song name'
-    show song info:
-        artist(s)
-        the song's name
-        a preview link of the song from Spotify
-        the album that the song is from
-        or default to ('The Sign' by Ace of Base)
 
-    node liri.js movie-this 'movie name'
-    output:
-        title
-        year
-        imdb rating
-        country where produced
-        language
-        plot
-        actors
-        rotten tomatoes rating
-        rotten tomatoes url
 
-    node liri.js do-what-it-says
-        take text from random.txt and run the appropriate command
 
-    bonus: output to a text file.
 
- */
 
-var twitter = require('keys.js');
-
-var allKeys = 
 
 
 
