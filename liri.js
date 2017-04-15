@@ -18,6 +18,9 @@ var liri = {
             if (!error) {
                 tweets.forEach(function(aTweet){
                                     console.log(aTweet.created_at.substring(4,10)+" "+aTweet.created_at.substring(aTweet.created_at.length-4)+" : "+aTweet.text);
+                                    fs.appendFile('log.txt',
+                                    aTweet.created_at.substring(4,10)+" "+aTweet.created_at.substring(aTweet.created_at.length-4)+" : "+aTweet.text+'\n',
+                                    (err)=>{if(err)console.log('write file error.');});
                                });
             } else {
                 console.log('something went wrong with Twitter.');
@@ -40,6 +43,9 @@ var liri = {
                   console.log('Album: '+result.album.name);
                   console.log('--------------------------------------');
                   console.log(' ');
+                  fs.appendFile('log.txt',
+                  'Artist(s): '+artists+' \nSong Title: '+result.name+'\nPreview: '+result.preview_url+'\nAlbum: '+result.album.name+'\n--------------------------------------\n',
+                  (err)=>{if(err)console.log('write file error.');});
                 });
             }
         });
@@ -61,12 +67,19 @@ var liri = {
                         console.log('Language(s): '+result.Language);
                         console.log('Plot Summary: '+result.Plot);
                         console.log('Actors: '+result.Actors);
+                        fs.appendFile('log.txt',
+                        'Movie Title: '+result.Title+'\nYear Released: '+result.Year+'\nIMDB Rating: '+result.imdbRating+'\nProduced in '+result.Country+'\nLanguage(s): '+result.Language+'\nPlot Summary: '+result.Plot+'\nActors: '+result.Actors+'\n',
+                        (err)=>{if(err)console.log('write file error.');});
                         result.Ratings.forEach(function(rating){
                             if (rating.Source === "Rotten Tomatoes") {
                                 console.log('Rotten Tomatoes Score: '+rating.Value);
+                                fs.appendFile('log.txt','Rotten Tomatoes Score: '+rating.Value+'\n',
+                                (err)=>{if(err)console.log('write file error.');});
                             }
                         });
                         console.log('Website: '+(result.Webite || 'no website available'));
+                        fs.appendFile('log.txt','Website: '+(result.Webite+'\n' || 'no website available\n'),
+                        (err)=>{if(err)console.log('write file error.');});
                     }
                 }
             });
@@ -76,7 +89,6 @@ var liri = {
             if (err) {
                 console.log('file does not exist');
             } else {
-                console.log(data);
                 var inputs = data.split(',');
                 liri.askLiri(inputs[0],inputs[1].split('"')[1].split(' ').join('+'));
             }
@@ -96,6 +108,9 @@ var liri = {
         return option;
     },
     askLiri : function(inputCmd='',inputOpt=''){
+        if (!fs.existsSync('log.txt')) {
+            fs.writeFileSync('log.txt','Liri Response Log:\n\n','utf8');
+        }
         var command = inputCmd || this.grabCommand();
         if (this.commands.indexOf(command) === -1) {
             console.log('invalid command');    
