@@ -25,23 +25,21 @@ var liri = {
         });
     },
     askSpotify : function(option) {
-        // artist(s)
-        // song name
-        // preview link
-        // album
-        // default to the sign by ace of base if no song provided
         spotify.search({type: 'track', query: 'track:"'+option.trim()+'"' || 'track:"the+sign"&artist:"ace+of+base"'}, function(err, data){
             if (err) {
                 console.log('invalid song search');
             } else {
                 data.tracks.items.forEach(function(result){
-                  console.log('artist(s): ');
+                  var artists = '';
                   result.artists.forEach(function(artistResult){
-                    console.log(artistResult.name);
+                    artists += artistResult.name+', ';
                   });
+                  console.log('Artist(s): '+artists);
                   console.log('Song Title: '+result.name);
                   console.log('Preview: '+result.preview_url);
                   console.log('Album: '+result.album.name);
+                  console.log('--------------------------------------');
+                  console.log(' ');
                 });
             }
         });
@@ -73,8 +71,16 @@ var liri = {
                 }
             });
     },
-    askFile : function(option) {
-
+    askFile : function(fileName='random.txt') {
+        fs.readFile(fileName,'utf8',function(err,data){
+            if (err) {
+                console.log('file does not exist');
+            } else {
+                console.log(data);
+                var inputs = data.split(',');
+                liri.askLiri(inputs[0],inputs[1].split('"')[1].split(' ').join('+'));
+            }
+        });
     },
     isValidCommand : function(command){
         return (this.commands.indexOf(command) != -1) ? commands.indexOf(command) : false;
@@ -89,17 +95,17 @@ var liri = {
         }
         return option;
     },
-    askLiri : function(){
-        var command = this.grabCommand();
+    askLiri : function(inputCmd='',inputOpt=''){
+        var command = inputCmd || this.grabCommand();
         if (this.commands.indexOf(command) === -1) {
             console.log('invalid command');    
         } else if (this.commands.indexOf(command) === 0) {
               this.askTwitter();
           } else if (this.commands.indexOf(command) === 1) {
-                this.askSpotify(this.grabOption());
+                this.askSpotify(inputOpt || this.grabOption());
             } else if (this.commands.indexOf(command) === 2) {
-                  this.askOMDB(this.grabOption());
-              } else {
+                  this.askOMDB(inputOpt || this.grabOption());
+              } else if (this.commands.indexOf(command) === 3) {
                     this.askFile();
                 }
         }
